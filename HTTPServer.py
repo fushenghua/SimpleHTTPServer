@@ -1,9 +1,12 @@
+"""Simple HTTP Server.
+This module builds on BaseHTTPServer by implementing the standard GET
+and HEAD requests in a fairly straightforward manner.
+"""
+
 
 __version__ = "0.6"
 
 __all__ = ["SimpleHTTPRequestHandler"]
-
-from flask import Flask, render_template, redirect, url_for, request
 
 import os
 import posixpath
@@ -13,43 +16,16 @@ import cgi
 import sys
 import shutil
 import mimetypes
+import json
+import re
+import time 
+import socket
+from os.path import join, getsize
 try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
 
-app = Flask(__name__)
-
-@app.route('/')
-def index(name=None):
-    base_dir = os.path.dirname(request.path)
-    path = translate_path(base_dir)
-    files_list = os.listdir(path)
-    print files_list
-    return render_template('index.html', files_list=files_list)
-
-def do_GET():
-    print "get"
-
-def translate_path(path):
-        """Translate a /-separated PATH to the local filename syntax.
-        Components that mean special things to the local file system
-        (e.g. drive or directory names) are ignored.  (XXX They should
-        probably be diagnosed.)
-        """
-        # abandon query parameters
-        path = path.split('?',1)[0]
-        path = path.split('#',1)[0]
-        path = posixpath.normpath(urllib.unquote(path))
-        words = path.split('/')
-        words = filter(None, words)
-        path = os.getcwd()
-        for word in words:
-            drive, word = os.path.splitdrive(word)
-            head, word = os.path.split(word)
-            if word in (os.curdir, os.pardir): continue
-            path = os.path.join(path, word)
-        return path 
 
 class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -131,23 +107,78 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         list.sort(key=lambda a: a.lower())
         f = StringIO()
         displaypath = cgi.escape(urllib.unquote(self.path))
-        f.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">')
-        f.write("<html>\n<title>to8to apk Directory listing for %s</title>\n" % displaypath)
-        f.write("<body>\n<h2>to8to apk  Directory listing for %s</h2>\n" % displaypath)
-        f.write("<hr>\n<ul>\n")
+        rootPath = os.path.dirname(os.path.abspath(__file__))+"/"
+        root =".root"
+        config = open(rootPath+"/.root/config.json")
+
+        setting = json.load(config)
+        projectName = setting["name"]
+        strinfo = re.compile('projectName')
+        head = open(rootPath+root+"/head.html")
+        footer = open(rootPath+root+"/footer.html")
+        contentFile = open(rootPath+root+"/content.html")
+        contentStr = contentFile.readline()
+        contentFile.close()
+        for line in head.readlines():
+            b = strinfo.sub(projectName, line)
+            f.write(b)
+        head.close
+
+        prePath = "/"
+        f.write('<li class="breadcrumb-item"><i class="fa fa-folder-open"> </i><a href="%s">%s</a></li>' %
+                (prePath, " root "))
+        for prePath2 in self.splitPath(displaypath):
+            if prePath2.strip():
+                prePath = prePath+prePath2+"/"
+                print prePath
+                f.write(
+                    '<li class="breadcrumb-item"><a href="%s">%s </a></li>' % (prePath, prePath2))
+        f.write("</ol>\n")
+
+        # f.write('<div class="row"><ul class="fa-ul">\n')
+        f.write('<div class="row fa-ul mr-3 mt-3">\n')
+        icon2=""
         for name in list:
             fullname = os.path.join(path, name)
             displayname = linkname = name
+            icon = '<span class="fa-li"><i class="fa fa-file-o"></i></span>'
+            if cmp(root,displayname)==0 or cmp("HTTPServer.py",displayname)==0: continue
             # Append / for directories or @ for symbolic links
             if os.path.isdir(fullname):
                 displayname = name + "/"
                 linkname = name + "/"
+                icon = '<span class="fa-li"><i class="fa fa-folder"></i></span>'
             if os.path.islink(fullname):
                 displayname = name + "@"
                 # Note: a link to a directory displays with @ and links with /
-            f.write('<li><a href="%s">%s</a>\n'
-                    % (urllib.quote(linkname), cgi.escape(displayname)))
-        f.write("</ul>\n<hr>\n</body>\n</html>\n")
+                icon=""
+            if "apk" in fullname:
+                icon = '<span class="fa-li"><i class="fa fa-android fa-xs"></i></span>' 
+                myname = socket.getfqdn(socket.gethostname())
+                myaddr = socket.gethostbyname(myname)+":8000"+"/"+displayname
+                # print (myaddr)
+                icon2='<a href="#" data-toggle="modal" data-target="#qrcode" data-whatever="%s"><i class="fa fa-qrcode p-2 text-dark" aria-hidden="true"></i></a><a href="%s"><i class="fa fa-cloud-download p-2 text-dark" aria-hidden="true"></i></a>\n'%(myaddr,displayname)
+            if "html" in fullname:
+                icon = '<span class="fa-li"><i class="fa fa-html5 fa-xs"></i></span>'
+            if "py" in fullname or "java" in fullname:
+                icon = '<span class="fa-li"><i class="fa fa-file-code-o"></i></span>'
+
+            filemt= time.localtime(os.stat(fullname).st_mtime) 
+            filetime=time.strftime("%Y-%m-%d",filemt) 
+            # print filetime  
+            f.write(
+                contentStr.format(
+                    icon, urllib.quote(
+                linkname), cgi.escape(displayname),filetime,icon2
+                )
+            )
+
+        # f.write("</div>")
+        for line in footer.readlines():
+            b = strinfo.sub(projectName, line)
+            f.write(b)
+        footer.close()
+
         length = f.tell()
         f.seek(0)
         self.send_response(200)
@@ -157,6 +188,13 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.end_headers()
         return f
 
+    def splitPath(self, path):
+        return path.split("/")
+
+    def getRootPath(self):
+        rootPath = os.path.dirname(os.path.abspath(__file__))
+        return rootPath
+
     def translate_path(self, path):
         """Translate a /-separated PATH to the local filename syntax.
         Components that mean special things to the local file system
@@ -164,8 +202,8 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         probably be diagnosed.)
         """
         # abandon query parameters
-        path = path.split('?',1)[0]
-        path = path.split('#',1)[0]
+        path = path.split('?', 1)[0]
+        path = path.split('#', 1)[0]
         path = posixpath.normpath(urllib.unquote(path))
         words = path.split('/')
         words = filter(None, words)
@@ -173,7 +211,8 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         for word in words:
             drive, word = os.path.splitdrive(word)
             head, word = os.path.split(word)
-            if word in (os.curdir, os.pardir): continue
+            if word in (os.curdir, os.pardir):
+                continue
             path = os.path.join(path, word)
         return path
 
@@ -211,15 +250,23 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.extensions_map['']
 
     if not mimetypes.inited:
-        mimetypes.init() # try to read system mime.types
+        mimetypes.init()  # try to read system mime.types
     extensions_map = mimetypes.types_map.copy()
     extensions_map.update({
-        '': 'application/octet-stream', # Default
+        '': 'application/octet-stream',  # Default
         '.py': 'text/plain',
         '.c': 'text/plain',
         '.h': 'text/plain',
-        })
+    })
+
+
+def test(HandlerClass=SimpleHTTPRequestHandler,
+         ServerClass=BaseHTTPServer.HTTPServer):
+    BaseHTTPServer.test(HandlerClass, ServerClass)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    test()
+    # print("/.git/refs/remotes/origin/".split("/"))
+    # strin='<div class="col-md-6"><li>{}<a href="{}">{}</a></div></li><div class="col-md-2">.col-md-4</div><div class="col-md-2">.col-md-4</div><div class="col-md-2"><i class="fa fa-qrcode" aria-hidden="true"></i><i class="fa fa-cloud-download" aria-hidden="true"></i></div>'
+    # print strin.format(1,2,3)
