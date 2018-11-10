@@ -1,0 +1,77 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../../../favicon.ico">
+
+    <title>to8to apk list</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.bootcss.com/twitter-bootstrap/4.1.3/css/bootstrap.css" rel="stylesheet">
+   <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+    body {
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+    </style>
+  </head>
+
+  <body class="bg-light">
+    
+    <div class="container">
+        <div class="header clearfix">
+          <nav>
+            <ul class="nav nav-pills pull-right">
+              <li role="presentation" class="active"><a href="#">Home</a></li>
+              <li role="presentation"><a href="#">About</a></li>
+            </ul>
+          </nav>
+          <h3 class="text-muted">to8to Android</h3>
+        </div>
+  
+        <ul class="list-group">
+             {% for file in files_list %}
+               
+                <li class="list-group-item"> <a href="{{ file }}/">{{ file }}</a></li>
+            {% endfor %}
+        </ul>
+      
+  
+        <div class="row marketing">
+          <div class="col-lg-6">
+            <h4>Subheading</h4>
+            <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
+  
+            <h4>Subheading</h4>
+            <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
+  
+            <h4>Subheading</h4>
+            <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+          </div>
+  
+          <div class="col-lg-6">
+            <h4>Subheading</h4>
+            <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
+  
+            <h4>Subheading</h4>
+            <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
+  
+            <h4>Subheading</h4>
+            <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+          </div>
+        </div>
+  
+        <footer class="footer">
+          <p>&copy; 2018 to8to Android.</p>
+        </footer>
+  
+      </div> <!-- /container -->
+  </body>
+</html>

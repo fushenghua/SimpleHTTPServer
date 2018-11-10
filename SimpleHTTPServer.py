@@ -126,7 +126,8 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 f.write('<li class="breadcrumb-item"><a href="%s">%s </a></li>'% (prePath,prePath2))   
         f.write("</ol>\n")
 
-        f.write('<div class="row"><ul class="fa-ul">\n')
+        # f.write('<div class="row"><ul class="fa-ul">\n')
+        f.write('<div class="row">\n')
         for name in list:
             fullname = os.path.join(path, name)
             displayname = linkname = name
