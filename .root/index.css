@@ -9,6 +9,14 @@ body {
   min-height: calc(100vh - 140px);
 }
 
+.col-md-6{
+  position: relative;
+  width: 100%;
+  min-height: 1px;
+  padding-right: 15px;
+  padding-left: 0px;
+}
+
 /* Everything but the jumbotron gets side spacing for mobile first views */
 .header,
 .marketing,
