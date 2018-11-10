@@ -2,19 +2,25 @@
 body {
   padding-top: 5px;
   padding-bottom: 20px;
- 
+  font-family: Raleway,HelveticaNeue,"Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 
 .container{
   min-height: calc(100vh - 140px);
 }
 
-.col-md-6{
+/* .col-md-6{
   position: relative;
   width: 100%;
   min-height: 1px;
   padding-right: 15px;
   padding-left: 0px;
+} */
+
+.fa-ul {
+  padding-left: 0;
+  margin-left: 0.14285714em;
+  list-style-type: none;
 }
 
 /* Everything but the jumbotron gets side spacing for mobile first views */

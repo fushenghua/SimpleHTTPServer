@@ -135,33 +135,33 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     '<li class="breadcrumb-item"><a href="%s">%s </a></li>' % (prePath, prePath2))
         f.write("</ol>\n")
 
-        # f.write('<div class="row"><ul class="fa-ul">\n')
-        f.write('<div class="row fa-ul mr-3 mt-3">\n')
+        f.write('<ul class="fa-ul">\n')
+        # f.write('<div class="row fa-ul mr-3 mt-3">\n')
         icon2=""
         for name in list:
             fullname = os.path.join(path, name)
             displayname = linkname = name
-            icon = '<span class="fa-li"><i class="fa fa-file-o"></i></span>'
+            icon = '<i class="fa fa-file-o"></i>'
             if cmp(root,displayname)==0 or cmp("HTTPServer.py",displayname)==0: continue
             # Append / for directories or @ for symbolic links
             if os.path.isdir(fullname):
                 displayname = name + "/"
                 linkname = name + "/"
-                icon = '<span class="fa-li"><i class="fa fa-folder"></i></span>'
+                icon = '<i class="fa fa-folder"></i>'
             if os.path.islink(fullname):
                 displayname = name + "@"
                 # Note: a link to a directory displays with @ and links with /
                 icon=""
             if "apk" in fullname:
-                icon = '<span class="fa-li"><i class="fa fa-android fa-xs"></i></span>' 
+                icon = '<i class="fa fa-android fa-xs"></i>' 
                 myname = socket.getfqdn(socket.gethostname())
                 myaddr = socket.gethostbyname(myname)+":8000"+"/"+displayname
                 # print (myaddr)
                 icon2='<a href="#" data-toggle="modal" data-target="#qrcode" data-whatever="%s"><i class="fa fa-qrcode p-2 text-dark" aria-hidden="true"></i></a><a href="%s"><i class="fa fa-cloud-download p-2 text-dark" aria-hidden="true"></i></a>\n'%(myaddr,displayname)
             if "html" in fullname:
-                icon = '<span class="fa-li"><i class="fa fa-html5 fa-xs"></i></span>'
+                icon = '<i class="fa fa-html5 fa-xs"></i>'
             if "py" in fullname or "java" in fullname:
-                icon = '<span class="fa-li"><i class="fa fa-file-code-o"></i></span>'
+                icon = '<i class="fa fa-file-code-o"></i>'
 
             filemt= time.localtime(os.stat(fullname).st_mtime) 
             filetime=time.strftime("%Y-%m-%d",filemt) 
@@ -173,7 +173,7 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 )
             )
 
-        # f.write("</div>")
+        f.write("</ul>")
         for line in footer.readlines():
             b = strinfo.sub(projectName, line)
             f.write(b)
