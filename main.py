@@ -3,8 +3,7 @@ __version__ = "0.6"
 
 __all__ = ["SimpleHTTPRequestHandler"]
 
-from flask import Flask
-from flask import render_template
+from flask import Flask, render_template, redirect, url_for, request
 
 import os
 import posixpath
@@ -21,13 +20,36 @@ except ImportError:
 
 app = Flask(__name__)
 
-@app.route('/hello/')
-@app.route('/hello/<name>')
-def hello(name=None):
+@app.route('/')
+def index(name=None):
+    base_dir = os.path.dirname(request.path)
+    path = translate_path(base_dir)
+    files_list = os.listdir(path)
+    print files_list
+    return render_template('index.html', files_list=files_list)
 
+def do_GET():
+    print "get"
 
-    return render_template('index.html', name=name)
-
+def translate_path(path):
+        """Translate a /-separated PATH to the local filename syntax.
+        Components that mean special things to the local file system
+        (e.g. drive or directory names) are ignored.  (XXX They should
+        probably be diagnosed.)
+        """
+        # abandon query parameters
+        path = path.split('?',1)[0]
+        path = path.split('#',1)[0]
+        path = posixpath.normpath(urllib.unquote(path))
+        words = path.split('/')
+        words = filter(None, words)
+        path = os.getcwd()
+        for word in words:
+            drive, word = os.path.splitdrive(word)
+            head, word = os.path.split(word)
+            if word in (os.curdir, os.pardir): continue
+            path = os.path.join(path, word)
+        return path 
 
 class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -200,4 +222,4 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

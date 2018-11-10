@@ -16,6 +16,8 @@ import cgi
 import sys
 import shutil
 import mimetypes
+import json
+import re
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -102,23 +104,62 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         list.sort(key=lambda a: a.lower())
         f = StringIO()
         displaypath = cgi.escape(urllib.unquote(self.path))
-        f.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">')
-        f.write("<html>\n<title>to8to apk Directory listing for %s</title>\n" % displaypath)
-        f.write("<body>\n<h2>to8to apk Directory listing for %s</h2>\n" % displaypath)
-        f.write("<hr>\n<ul>\n")
+        rootPath = os.path.dirname(os.path.abspath(__file__))
+        config = open(rootPath+"/config.json")
+        
+        setting = json.load(config)
+        projectName= setting["name"]
+        strinfo = re.compile('projectName')
+        head = open(rootPath+"/static/head.html") 
+        footer = open(rootPath+"/static/footer.html") 
+        for line in head.readlines(): 
+            b = strinfo.sub(projectName,line)
+            f.write(b)
+        head.close
+
+        prePath= "/"
+        f.write('<li class="breadcrumb-item"><i class="fa fa-folder-open"> </i><a href="%s">%s</a></li>'% (prePath," root "))
+        for prePath2 in self.splitPath(displaypath):
+            if prePath2.strip():
+                prePath=prePath+prePath2+"/"
+                print prePath
+                f.write('<li class="breadcrumb-item"><a href="%s">%s </a></li>'% (prePath,prePath2))   
+        f.write("</ol>\n")
+
+        f.write('<div class="row"><ul class="fa-ul">\n')
         for name in list:
             fullname = os.path.join(path, name)
             displayname = linkname = name
+            icon='<span class="fa-li"><i class="fa fa-file-o"></i></span>'
             # Append / for directories or @ for symbolic links
             if os.path.isdir(fullname):
                 displayname = name + "/"
                 linkname = name + "/"
+                icon='<span class="fa-li"><i class="fa fa-folder"></i></span>'
             if os.path.islink(fullname):
                 displayname = name + "@"
                 # Note: a link to a directory displays with @ and links with /
-            f.write('<li><a href="%s">%s</a>\n'
-                    % (urllib.quote(linkname), cgi.escape(displayname)))
-        f.write("</ul>\n<hr>\n</body>\n</html>\n")
+            if "apk" in fullname:   
+                icon='<span class="fa-li"><i class="fa fa-android fa-xs"></i></span>' 
+            if "html" in fullname:
+                icon= '<span class="fa-li"><i class="fa fa-html5 fa-xs"></i></span>' 
+            if "py" in fullname or "java" in fullname:
+                icon='<span class="fa-li"><i class="fa fa-file-code-o"></i></span>'  
+
+            f.write('<div class="col-md-6"><li>%s<a href="%s">%s</a> </div></li>\n'
+                    % (icon,urllib.quote(linkname), cgi.escape(displayname)))  
+            f.write('<div class="col-md-2">.col-md-4</div>')
+            f.write('<div class="col-md-2">.col-md-4</div>')  
+            f.write('<div class="col-md-2">.col-md-4</div>')  
+            f.write('<div class="col-md-2">.col-md-4</div>')            
+                    
+        # f.write("</ul>")
+        f.write("</div>")
+        for line in footer.readlines(): 
+                b = strinfo.sub(projectName,line)
+                f.write(b)   
+        footer.close()
+
         length = f.tell()
         f.seek(0)
         self.send_response(200)
@@ -127,6 +168,13 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(length))
         self.end_headers()
         return f
+
+    def splitPath(self,path):
+        return path.split("/")
+
+    def getRootPath(self):
+        rootPath = os.path.dirname(os.path.abspath(__file__))
+        return rootPath
 
     def translate_path(self, path):
         """Translate a /-separated PATH to the local filename syntax.
@@ -199,3 +247,4 @@ def test(HandlerClass = SimpleHTTPRequestHandler,
 
 if __name__ == '__main__':
     test()
+    # print("/.git/refs/remotes/origin/".split("/"))
